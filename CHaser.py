@@ -2,6 +2,40 @@ import socket
 import ipaddress
 import os
 
+import random
+
+COOL = 2009
+HOT  = 2010
+
+Floor = 0
+Enemy = 1
+Block = 2
+Item  = 3
+
+UpLeft = 0
+Up = 1
+UpRight = 2
+Left = 3
+Center = 4
+Right = 5
+DownLeft = 6
+Down = 7
+DownRight = 8
+
+UL = UpLeft
+U  = Up
+UR = UpRight
+L  = Left
+C  = Center
+R  = Right
+DL = DownLeft
+D  = Down
+DR = DownRight
+
+F = Floor
+E = Enemy
+B = Block
+I = Item
 
 class Client:
     def __init__(self):
@@ -129,3 +163,117 @@ class Client:
 
     def put_down(self):
         return self.__order("pd")
+    
+    ### action ###
+
+    # 指定方向に移動
+    def walk(self, direction):
+        action = {
+            Up    : self.walk_up,
+            Down  : self.walk_down,
+            Right : self.walk_right,
+            Left  : self.walk_left
+        }
+        return action[direction]()
+
+    # 指定方向を近隣探査
+    def look(self, direction):
+        action = {
+            Up    : self.look_up,
+            Down  : self.look_down,
+            Right : self.look_right,
+            Left  : self.look_left
+        }
+        return action[direction]()
+
+    # 指定方向を遠方探査
+    def search(self, direction):
+        action = {
+            Up    : self.search_up,
+            Down  : self.search_down,
+            Right : self.search_right,
+            Left  : self.search_left
+        }
+        return action[direction]()
+    
+    # 指定方向に設置
+    def put(self, direction):        
+        action = {
+            Up    : self.put_up,
+            Down  : self.put_down,
+            Right : self.put_right,
+            Left  : self.put_left
+        }
+        return action[direction]()
+    
+    ### direction ###
+
+    # 指定方向の反対方向
+    def backward(self, direction):
+        backward = {
+            Up    : Down,
+            Down  : Up,
+            Right : Left,
+            Left  : Right
+        }
+        return backward[direction]
+
+    # 指定方向の右方向
+    def rightward(self, direction):
+        rightward = {
+            Up    : Right,
+            Down  : Left,
+            Right : Down,
+            Left  : Up
+        }
+        return rightward[direction]
+
+    # 指定方向の左方向
+    def leftward(self, direction):
+        leftward = {
+            Up    : Left,
+            Down  : Right,
+            Right : Up,
+            Left  : Down
+        }
+        return leftward[direction]
+
+    # 指定方向の右前方向
+    def forwardRight(self, direction):
+        forwardRight = {
+            Up    : UpRight,
+            Down  : DownLeft,
+            Right : DownRight,
+            Left  : UpLeft
+        }
+        return forwardRight[direction]
+
+    # 指定方向の左前方向
+    def fowardLeft(self, direction):
+        fowardLeft = {
+            Up    : UpLeft,
+            Down  : DownRight,
+            Right : UpRight,
+            Left  : DownLeft
+        }
+        return fowardLeft[direction]
+
+    # 指定方向の右後方向
+    def backRight(self, direction):
+        backRight = {
+            Up    : DownRight,
+            Down  : UpLeft,
+            Right : DownLeft,
+            Left  : UpRight
+        }
+        return backRight[direction]
+
+    # 指定方向の左前方向
+    def backLeft(self, direction):
+        backLeft = {
+            Up    : DownLeft,
+            Down  : UpRight,
+            Right : UpLeft,
+            Left  : DownRight
+        }
+        return backLeft[direction]
