@@ -325,3 +325,20 @@ class Client:
                 
         # 選んだ方向に移動
         return self.walk(selectedMove), selectedMove
+
+    # 壁沿いに移動
+    def alongRightHandWalk(self, map_info, direction):
+        # 右、指定方向、左、後ろの順にブロックがなければ移動
+        if map_info[self.rightward(direction)] != Block and map_info[self.backRight(direction)] == Block:
+            selectedMove = self.rightward(direction)
+        elif map_info[direction] != Block:
+            selectedMove = direction
+        elif map_info[self.rightward(direction)] != Block:
+            selectedMove = self.rightward(direction)
+        elif map_info[self.leftward(direction)] != Block:
+            selectedMove = self.leftward(direction)
+        else:
+            selectedMove = self.backward(direction)
+                
+        # 選んだ方向に移動
+        return self.walk(selectedMove), selectedMove
