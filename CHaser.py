@@ -277,3 +277,26 @@ class Client:
             Left  : DownRight
         }
         return backLeft[direction]
+
+
+    # ブロックのない方向にランダム移動
+    def randomWalk(self, map_info, direction = None):
+        # 可能な移動のリスト
+        legalMove  = []
+        
+        # 上下左右のブロックを確認
+        for dir in [Up, Down, Left, Right]:
+            # 移動方向にブロックなし & 後退じゃない
+            if map_info[dir] != Block and direction != self.backward(dir):
+                legalMove.append(dir) # 移動方向を追加
+
+        if len(legalMove) > 0:
+            # 移動可能な中からランダムに選択
+            selectedMove = random.choice(legalMove)
+        else:
+            # 迂回できないときは後退を選択
+            selectedMove = self.backward(direction)
+
+        # 選んだ方向に移動
+        return self.walk(selectedMove), selectedMove
+
