@@ -38,13 +38,27 @@ B = Block
 I = Item
 
 class Client:
-    def __init__(self):
-        self.port = input('ポート番号を入力してください ⇒ ')
-        self.name = input('名前を入力してください ⇒ ')
-        if input('ローカルに接続しますか？(y/n)') == 'y':
-            self.host = '127.0.0.1'
+    def __init__(self, port=None, name=None, host=None):
+        if port != None:
+            self.port = port
         else:
-            self.host = input('IPアドレスを入力してください ⇒ ')
+            self.port = input('ポート番号を入力してください ⇒ ')
+        
+        if name != None:
+            self.name = name
+        else:
+            self.name = input('名前を入力してください ⇒ ')
+
+        if host != None:
+            if host == True or host == "localhost":        
+                self.host = '127.0.0.1'
+            else:
+                self.host = host
+        else:
+            if input('ローカルに接続しますか？(y/n)') == 'y':
+                self.host = '127.0.0.1'
+            else:
+                self.host = input('IPアドレスを入力してください ⇒ ')
 
         if not self.__ip_judge(self.host):
             os._exit(1)
@@ -61,9 +75,10 @@ class Client:
                 continue
             break
 
-        print("port:", self.port)
-        print("name:", self.name)
-        print("host:", self.host)
+        print("接続完了")
+        print("  名　前:", self.name)
+        print("  ポート:", self.port)
+        print("  ホスト:", self.host)
 
         self.__str_send(self.name + "\r\n")
 
