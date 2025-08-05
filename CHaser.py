@@ -300,3 +300,28 @@ class Client:
         # 選んだ方向に移動
         return self.walk(selectedMove), selectedMove
 
+
+    # ブロックを避けて指定方向に移動
+    def safetyWalk(self, map_info, direction):
+        # 指定方向にブロックがなければそのまま移動
+        if map_info[direction] != Block:
+            selectedMove = direction
+        else:
+            # 指定方向にブロックがある時は左右に迂回
+            # 可能な移動のリスト
+            legalMove  = []
+            for dir in [self.rightward(direction), self.leftward(direction)]:
+                # 移動方向にブロックなし
+                if map_info[dir] != Block:
+                    # 移動方向を追加
+                    legalMove.append(dir) 
+
+            if len(legalMove) > 0:
+                # 左右に迂回可能ならランダムに選択
+                selectedMove = random.choice(legalMove)
+            else:
+                # 迂回できないときは後退を選択
+                selectedMove = self.backward(direction)
+                
+        # 選んだ方向に移動
+        return self.walk(selectedMove), selectedMove
