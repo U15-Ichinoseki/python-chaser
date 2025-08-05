@@ -2,15 +2,63 @@ import socket
 import ipaddress
 import os
 
+import random
+
+COOL = 2009
+HOT  = 2010
+
+Floor = 0
+Enemy = 1
+Block = 2
+Item  = 3
+
+UpLeft = 0
+Up = 1
+UpRight = 2
+Left = 3
+Center = 4
+Right = 5
+DownLeft = 6
+Down = 7
+DownRight = 8
+
+UL = UpLeft
+U  = Up
+UR = UpRight
+L  = Left
+C  = Center
+R  = Right
+DL = DownLeft
+D  = Down
+DR = DownRight
+
+F = Floor
+E = Enemy
+B = Block
+I = Item
 
 class Client:
-    def __init__(self):
-        self.port = input('ポート番号を入力してください ⇒ ')
-        self.name = input('名前を入力してください ⇒ ')
-        if input('ローカルに接続しますか？(y/n)') == 'y':
-            self.host = '127.0.0.1'
+    def __init__(self, port=None, name=None, host=None):
+        if port != None:
+            self.port = port
         else:
-            self.host = input('IPアドレスを入力してください ⇒ ')
+            self.port = input('ポート番号を入力してください ⇒ ')
+        
+        if name != None:
+            self.name = name
+        else:
+            self.name = input('名前を入力してください ⇒ ')
+
+        if host != None:
+            if host == True or host == "localhost":        
+                self.host = '127.0.0.1'
+            else:
+                self.host = host
+        else:
+            if input('ローカルに接続しますか？(y/n)') == 'y':
+                self.host = '127.0.0.1'
+            else:
+                self.host = input('IPアドレスを入力してください ⇒ ')
 
         if not self.__ip_judge(self.host):
             os._exit(1)
@@ -27,9 +75,10 @@ class Client:
                 continue
             break
 
-        print("port:", self.port)
-        print("name:", self.name)
-        print("host:", self.host)
+        print("接続完了")
+        print("  名　前:", self.name)
+        print("  ポート:", self.port)
+        print("  ホスト:", self.host)
 
         self.__str_send(self.name + "\r\n")
 
@@ -129,3 +178,182 @@ class Client:
 
     def put_down(self):
         return self.__order("pd")
+    
+    ### action ###
+
+    # 指定方向に移動
+    def walk(self, direction):
+        action = {
+            Up    : self.walk_up,
+            Down  : self.walk_down,
+            Right : self.walk_right,
+            Left  : self.walk_left
+        }
+        return action[direction]()
+
+    # 指定方向を近隣探査
+    def look(self, direction):
+        action = {
+            Up    : self.look_up,
+            Down  : self.look_down,
+            Right : self.look_right,
+            Left  : self.look_left
+        }
+        return action[direction]()
+
+    # 指定方向を遠方探査
+    def search(self, direction):
+        action = {
+            Up    : self.search_up,
+            Down  : self.search_down,
+            Right : self.search_right,
+            Left  : self.search_left
+        }
+        return action[direction]()
+    
+    # 指定方向に設置
+    def put(self, direction):        
+        action = {
+            Up    : self.put_up,
+            Down  : self.put_down,
+            Right : self.put_right,
+            Left  : self.put_left
+        }
+        return action[direction]()
+    
+    ### direction ###
+
+    # 指定方向の反対方向
+    def backward(self, direction):
+        backward = {
+            Up    : Down,
+            Down  : Up,
+            Right : Left,
+            Left  : Right
+        }
+        return backward[direction]
+
+    # 指定方向の右方向
+    def rightward(self, direction):
+        rightward = {
+            Up    : Right,
+            Down  : Left,
+            Right : Down,
+            Left  : Up
+        }
+        return rightward[direction]
+
+    # 指定方向の左方向
+    def leftward(self, direction):
+        leftward = {
+            Up    : Left,
+            Down  : Right,
+            Right : Up,
+            Left  : Down
+        }
+        return leftward[direction]
+
+    # 指定方向の右前方向
+    def forwardRight(self, direction):
+        forwardRight = {
+            Up    : UpRight,
+            Down  : DownLeft,
+            Right : DownRight,
+            Left  : UpLeft
+        }
+        return forwardRight[direction]
+
+    # 指定方向の左前方向
+    def fowardLeft(self, direction):
+        fowardLeft = {
+            Up    : UpLeft,
+            Down  : DownRight,
+            Right : UpRight,
+            Left  : DownLeft
+        }
+        return fowardLeft[direction]
+
+    # 指定方向の右後方向
+    def backRight(self, direction):
+        backRight = {
+            Up    : DownRight,
+            Down  : UpLeft,
+            Right : DownLeft,
+            Left  : UpRight
+        }
+        return backRight[direction]
+
+    # 指定方向の左前方向
+    def backLeft(self, direction):
+        backLeft = {
+            Up    : DownLeft,
+            Down  : UpRight,
+            Right : UpLeft,
+            Left  : DownRight
+        }
+        return backLeft[direction]
+
+
+    # ブロックのない方向にランダム移動
+    def randomWalk(self, map_info, direction = None):
+        # 可能な移動のリスト
+        legalMove  = []
+        
+        # 上下左右のブロックを確認
+        for dir in [Up, Down, Left, Right]:
+            # 移動方向にブロックなし & 後退じゃない
+            if map_info[dir] != Block and direction != self.backward(dir):
+                legalMove.append(dir) # 移動方向を追加
+
+        if len(legalMove) > 0:
+            # 移動可能な中からランダムに選択
+            selectedMove = random.choice(legalMove)
+        else:
+            # 迂回できないときは後退を選択
+            selectedMove = self.backward(direction)
+
+        # 選んだ方向に移動
+        return self.walk(selectedMove), selectedMove
+
+
+    # ブロックを避けて指定方向に移動
+    def safetyWalk(self, map_info, direction):
+        # 指定方向にブロックがなければそのまま移動
+        if map_info[direction] != Block:
+            selectedMove = direction
+        else:
+            # 指定方向にブロックがある時は左右に迂回
+            # 可能な移動のリスト
+            legalMove  = []
+            for dir in [self.rightward(direction), self.leftward(direction)]:
+                # 移動方向にブロックなし
+                if map_info[dir] != Block:
+                    # 移動方向を追加
+                    legalMove.append(dir) 
+
+            if len(legalMove) > 0:
+                # 左右に迂回可能ならランダムに選択
+                selectedMove = random.choice(legalMove)
+            else:
+                # 迂回できないときは後退を選択
+                selectedMove = self.backward(direction)
+                
+        # 選んだ方向に移動
+        return self.walk(selectedMove), selectedMove
+
+    # 壁沿いに移動
+    def alongRightHandWalk(self, map_info, direction):
+        # 右、指定方向、左、後ろの順にブロックがなければ移動
+        if map_info[self.rightward(direction)] != Block and map_info[self.backRight(direction)] == Block:
+            selectedMove = self.rightward(direction)
+        elif map_info[direction] != Block:
+            selectedMove = direction
+        elif map_info[self.rightward(direction)] != Block:
+            selectedMove = self.rightward(direction)
+        elif map_info[self.leftward(direction)] != Block:
+            selectedMove = self.leftward(direction)
+        else:
+            selectedMove = self.backward(direction)
+                
+        # 選んだ方向に移動
+        return self.walk(selectedMove), selectedMove
