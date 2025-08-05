@@ -2,17 +2,30 @@ import socket
 import ipaddress
 import os
 
+
 class Client:
     def __init__(self):
-        self.port = input("ポート番号を入力してください → ")
-        self.name = input("ユーザー名を入力してください → ")[:15]
-        self.host = input("サーバーのIPアドレスを入力してください → ")
+        self.port = input('ポート番号を入力してください ⇒ ')
+        self.name = input('名前を入力してください ⇒ ')
+        if input('ローカルに接続しますか？(y/n)') == 'y':
+            self.host = '127.0.0.1'
+        else:
+            self.host = input('IPアドレスを入力してください ⇒ ')
 
         if not self.__ip_judge(self.host):
             os._exit(1)
 
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.client.connect((self.host, int(self.port)))
+        self.connected = False
+        while True:
+            try:
+                self.client.connect((self.host, int(self.port)))
+            except ConnectionRefusedError:
+                if not self.connected:
+                    self.connected = True
+                    print('サーバーが起動していません')
+                continue
+            break
 
         print("port:", self.port)
         print("name:", self.name)
@@ -32,7 +45,7 @@ class Client:
     def __str_send(self, send_str):
         try:
             self.client.sendall(send_str.encode("utf-8"))
-        except:
+        except OSError:
             print("send error:{0}\0".format(send_str))
 
     def __order(self, order_str, gr_flag = False):
@@ -40,7 +53,7 @@ class Client:
             if gr_flag:
                 responce = self.client.recv(4096)
 
-                if(b'@' in responce):
+                if b"@" in responce:
                     pass # Connection completed.
                 else:
                     print("Connection failed.")
@@ -52,9 +65,10 @@ class Client:
             if not gr_flag:
                 self.__str_send("#\r\n")
 
-            if responce[0] == '1':
+            if responce[0] == "1":
                 return [int(x) for x in responce[1:10]]
-            elif responce[0] == '0':
+            elif responce[0] == "0":
+                self.box()
                 raise OSError("Game Set!")
             else:
                 print("responce[0] = {0} : Response error.".format(responce[0]))
@@ -115,4 +129,3 @@ class Client:
 
     def put_down(self):
         return self.__order("pd")
-    
