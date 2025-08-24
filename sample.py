@@ -1,45 +1,107 @@
-import CHaser # 同じディレクトリに CHaser.py がある前提
+import argparse
+from lib.CHaser import * # lib/CHaser.py
 
 """
-このファイルを直接実行したときに実行する関数．
-実行するまでの経緯はファイルの下部に記載．
+【ライブラリの配置方法】
+    同じフォルダ内に「lib」フォルダを作成し、その中に「CHaser.py」ファイルを配置してください。
 
-get_ready() → 行動関数 → get_ready() → ... の順で必ず処理を行う．
-行動関数は「内容_方向()」の命名規則に従って名付けられる．
+【サーバーとの接続方法】
+    Client クラスの引数に port, name, host を指定します。
+    指定しない場合は、実行時に入力を求められます。
+    例： player = Client(2010, "Cool", "localhost")
 
-内容は「walk」「look」「search」「put」の4種類．
-方向は「right」「up」「left」「down」の4種類．この組み合わせで関数を命名．
-例) walk_up()，search_right() など
+    プログラムの末尾にある以下の記述により、コマンドライン引数を使って接続情報を指定できます。
 
-行動関数が返すリストは行動後のマップ情報9つ．
-[ ][x][x]
-[ ][C][♡]
-[H][ ][ ]
-このときは [0, 2, 2, 0, 0, 3, 1, 0, 0] が返る．
+        parser.add_argument('-p', '--port', default=2010)
+        parser.add_argument('-n', '--name', default='sample')
+        parser.add_argument('-i', '--host', default='localhost')
+
+    `default` の値を変更することで、引数を省略した場合に使用される初期値を変更できます。
+
+    【使用例】
+
+        python sample.py -p 2010 -n Cool -i localhost
+        python sample.py --port 2010 --name Cool --host localhost
+        python sample.py -n Cool
+
+
+【行動関数の記述形式】
+    行動関数は「行動(方向)」の形式で記述します。
+     行動は「walk」「look」「search」「put」の4種類
+     方向は「Right」「Up」「Left」「Down」の4種類
+    例： walk(Up), search(Right) など
+
+【マスの情報】
+    行動関数が返すマップ情報は、以下のいずれかの種類です。
+    「Floor」:なしもない
+    「Enemy」:相手
+    「Block」:ブロック
+    「Item」 :アイテム
+
+【マップ情報の構造】
+    行動関数は、行動後の周囲9マスの情報を以下の順番でリストとして返します。
+
+    「UpLeft」  |  「Up」   |「UpRight」
+    -----------+-----------+-----------
+    「Left」    |「Center」 |  「Right」
+    -----------+-----------+-----------
+    「DownLeft」| 「Down」  |「DownRight」
 """
-def main():
-    value = [] # フィールド情報を保存するリスト
-    client = CHaser.Client() # サーバーと通信するためのインスタンス
 
-    while(True):
-        value = client.get_ready() # サーバーに行動準備が完了したと伝える
-        value = client.search_left() # サーバーに行動内容を伝える
+player = None
+map_info = [] # 周辺情報を保存するリスト
+look_info = [] # 近隣情報を保存するリスト
+search_info = [] # 遠方情報を保存するリスト
 
-        value = client.get_ready() # 行動する前には必ず get_ready() する
-        if value[7] != 2:
-            value = client.walk_down()
+def main(port, name, host):
+    global player, map_info, look_info, search_info
+    
+    # サーバーと接続
+    player = Client(port=port, name=name, host=host)
+
+    while True:
+        # ターン１
+        # 準備完了
+        player.get_ready()
+        # 左遠方探査
+        player.search(Left)
+
+        # ターン２
+        # 準備完了 & 自己周辺探査
+        map_info = player.get_ready()
+        # 下がブロックでなければ
+        if map_info[Down] != Block:
+            # 下移動
+            player.walk(Down)
         else:
-            value = client.put_up()
+            # 上設置
+            player.put(Up)
 
-        value = client.get_ready()
-        value = client.look_up()
+        # ターン３
+        # 準備完了
+        player.get_ready()
+        # 上近隣探査
+        player.look(Up)
 
-        value = client.get_ready()
-        value = client.put_right()
+        # ターン４
+        # 準備完了
+        player.get_ready()
+        # 右設置
+        player.put(Right)
+
+
+
 
 """
 python sample.py のようにこのファイルを直接実行すると，
 __name__ は "__main__" となる．これを利用して main() を実行する．
 """
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-p', '--port', default=2010)
+    parser.add_argument('-n', '--name', default='sample')
+    parser.add_argument('-i', '--host', default='localhost')
+    
+    args = parser.parse_args()
+
+    main(port=args.port, name=args.name, host=args.host)

@@ -1,3 +1,35 @@
+"""
+【ライブラリの配置方法】
+    クライアントプログラムと同じフォルダ内に「lib」フォルダを作成し、その中に本ライブラリファイルを配置してください。
+
+【サーバーとの接続方法】
+    Client クラスの引数に port, name, host を指定します。
+    指定しない場合は、実行時に入力を求められます。
+    例： player = Client(2010, "Cool", "localhost")
+
+【行動関数の記述形式】
+    行動関数は「行動(方向)」の形式で記述します。
+     行動は「walk」「look」「search」「put」の4種類
+     方向は「Right」「Up」「Left」「Down」の4種類
+    例： walk(Up), search(Right) など
+
+【マスの情報】
+    行動関数が返すマップ情報は、以下のいずれかの種類です。
+    「Floor」:なしもない
+    「Enemy」:相手
+    「Block」:ブロック
+    「Item」 :アイテム
+
+【マップ情報の構造】
+    行動関数は、行動後の周囲9マスの情報を以下の順番でリストとして返します。
+
+    「UpLeft」  |  「Up」   |「UpRight」
+    -----------+-----------+-----------
+    「Left」    |「Center」 |  「Right」
+    -----------+-----------+-----------
+    「DownLeft」| 「Down」  |「DownRight」
+"""
+
 import socket
 import ipaddress
 import os
