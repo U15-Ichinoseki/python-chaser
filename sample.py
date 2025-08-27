@@ -16,7 +16,7 @@ from lib.CHaser import * # lib/CHaser.py
         parser.add_argument('-n', '--name', default='sample')
         parser.add_argument('-i', '--host', default='localhost')
 
-    `default` の値を変更することで、引数を省略した場合に使用される初期値を変更できます。
+    default の値を変更することで、引数を省略した場合に使用される初期値を変更できます。
 
     【使用例】
 
